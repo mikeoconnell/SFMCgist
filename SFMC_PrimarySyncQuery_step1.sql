@@ -1,0 +1,70 @@
+SELECT
+    bb.LOOKUP_ID AS SUBSCRIBER_KEY
+    , CASE WHEN gf.EMAIL_ADDRESS IS NOT NULL THEN 1 ELSE 0 END AS WebForm
+    , CASE WHEN lum.EMAIL_ADDRESS IS NOT NULL THEN 1 ELSE 0 END AS Luminate
+    , CASE WHEN aa.EMAIL_ADDRESS IS NOT NULL THEN 1 ELSE 0 END AS AdvantageAI
+    , CASE WHEN cc.EMAIL_ADDRESS IS NOT NULL THEN 1 ELSE 0 END AS ConstantContact
+    , 1 AS BBCRM
+    , CASE  
+       WHEN gf.IMPORT_DATE IS NOT NULL AND (gf.Import_Date >= lum.Import_Date OR lum.Import_Date IS NULL)  AND (gf.Import_Date >= aa.Import_Date OR aa.Import_Date IS NULL) AND (gf.Import_Date >= cc.Import_Date OR cc.Import_Date IS NULL) THEN gf.Import_Date
+       WHEN lum.Import_Date IS NOT NULL AND (lum.Import_Date >= gf.Import_Date OR gf.Import_Date IS NULL) AND (lum.Import_Date >= aa.Import_Date OR aa.Import_Date IS NULL) AND (lum.Import_Date >= cc.Import_Date OR cc.Import_Date IS NULL) THEN lum.Import_Date
+       WHEN aa.Import_Date IS NOT NULL AND (aa.Import_Date >= gf.Import_Date OR gf.Import_Date IS NULL) AND (aa.Import_Date >= lum.Import_Date OR lum.Import_Date IS NULL) AND (aa.Import_Date >= cc.Import_Date OR cc.Import_Date IS NULL) THEN aa.Import_Date
+       ELSE cc.Import_Date END AS IMPORT_DATE    
+    , bb.CONSTITUENT_TYPE
+    , bb.ALTERNATE_LOOKUP_ID
+    , bb.ALTERNATE_LOOKUP_ID_TYPE_CODE
+    , bb.LOOKUP_ID
+    , COALESCE (m.SFMC_SUB_KEY, bb.LOOKUP_ID, lum.LOOKUP_ID, aa.SFMC_SUB_KEY) AS SFMC_SUB_KEY
+    , bb.EMAIL_ADDRESS
+    , COALESCE (gf.FIRST_NAME, bb.FIRST_NAME, m.FIRST_NAME) AS FIRST_NAME
+    , bb.MIDDLE_NAME
+    , COALESCE(gf.HOUSEHOLD_NAME, bb.HOUSEHOLD_NAME, m.HOUSEHOLD_NAME) AS HOUSEHOLD_NAME
+    , bb.TITLE
+    , bb.SUFFIX
+    , bb.ADDRESS_TYPE
+    , bb.ADDRESS_COUNTRY
+    , bb.ADDRESS
+    , bb.CITY
+    , bb.STATE
+    , bb.ZIP
+    , bb.ADDRESS_INFO_SOURCE
+    , COALESCE (bb.EMAIL_STATUS, lum.EMAIL_STATUS) AS EMAIL_STATUS
+    , bb.DO_NOT_EMAIL
+    , gf.OPT_IN_DATE
+    , bb.DATE_CHANGED
+    , COALESCE (gf.ACCEPTS_EMAIL, lum.ACCEPTS_EMAIL) AS ACCEPTS_EMAIL
+    , gf.ACCEPTS_SMS
+    , gf.ACCEPTS_PHONE
+    , bb.EMAIL_ADDRESS_PRIMARY
+    , bb.EMAIL_ADDRESS_TYPE
+    , bb.EMAIL_ADDRESS_INFO_SOURCE
+    , bb.SOLICIT_CODE1
+    , bb.SOLICIT_CODE1_START_DATE
+    , bb.SOLICIT_CODE1_END_DATE
+    , COALESCE(gf.ORIGIN_SRC_CODE, aa.ORIGIN_SRC_CODE, m.ORIGIN_SRC_CODE, lum.ORIGIN_SRC_CODE) AS ORIGIN_SRC_CODE
+    , COALESCE(aa.ORIGIN_SUB_CODE, m.ORIGIN_SUB_CODE) AS ORIGIN_SUB_CODE
+    , bb.HH_FIRST_GIFT_DATE
+    , bb.HH_MOST_RECENT_GIFT_DATE
+    , bb.HH_LARGEST_LIFETIME_GIFT_DATE
+    , bb.DEVELOPMENT_PORTFOLIO_TAG_ATTRIBUTE
+    , bb.PROSPECT_MANAGER
+    , bb.DECEASED
+    , bb.HH_FIRST_GIFT_AMOUNT
+    , bb.HH_MOST_RECENT_GIFT_AMOUNT
+    , bb.HH_LARGEST_LIFETIME_GIFT_AMOUNT
+    , COALESCE(m.BIRTH_DATE, lum.BIRTH_DATE) AS BIRTH_DATE
+    , COALESCE(m.GENDER, lum.GENDER) AS GENDER
+    , cc.COMPANY
+    , cc.BUSINESS_UNIT AS DEPARTMENT
+    , COALESCE(gf.PHONE, aa.PHONE, lum.Phone, cc.Phone_Home) AS PHONE
+    , COALESCE(lum.Phone_Alt, cc.Phone_Mobile) AS PHONE_ALT
+    , bb.SFMC_DONOR_ATTRIBUTE
+    , COALESCE (bb.HH_FIRST_GIFT_DATE, m.ORIGIN_DATE, gf.OPT_IN_DATE, m.OPT_IN_DATE, m.IMPORT_DATE) AS ORIGIN_DATE
+    , lum.EMAIL_OPT_OUT_DATE
+    , lum.HARD_BOUNCE_COUNT
+FROM [back up data for 1003 Headerset] bb
+LEFT JOIN GravityForms_Import gf ON gf.EMAIL_ADDRESS = bb.EMAIL_ADDRESS
+LEFT JOIN AdvantageAI_Import aa ON aa.EMAIL_ADDRESS = bb.EMAIL_ADDRESS
+LEFT JOIN Luminate_Import lum ON lum.LOOKUP_ID = bb.LOOKUP_ID
+LEFT JOIN ConstantContact_Import cc ON cc.EMAIL_ADDRESS = bb.EMAIL_ADDRESS
+LEFT JOIN [MASTER DATA EXTENSION] m ON m.EMAIL_ADDRESS = bb.EMAIL_ADDRESS
